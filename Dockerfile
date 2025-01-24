@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+FROM registry.access.redhat.com/ubi9/ubi:latest
 
 # Set labels
 LABEL maintainer="Your Name <your@email.com>" \
@@ -19,6 +19,8 @@ ENV LDAP_USER=ldap \
 # Install required packages
 RUN microdnf -y update && \
     microdnf -y install \
+        2to3 \
+        openldap \
         openldap-servers \
         openldap-clients \
         openssl \
