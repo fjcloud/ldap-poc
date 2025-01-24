@@ -18,6 +18,11 @@ set_cachesize 0 268435456 1
 set_lg_regionmax 262144
 set_lg_bsize 2097152
 EOF
+
+    # Create initial directory structure
+    mkdir -p "${LDAP_CONFIG_DIR}/cn=config/olcDatabase={0}config"
+    mkdir -p "${LDAP_CONFIG_DIR}/cn=config/olcDatabase={1}mdb"
+    mkdir -p "${LDAP_CONFIG_DIR}/cn=config/cn=schema"
     
     # Initialize LDAP database
     slapadd -F "${LDAP_CONFIG_DIR}" -n 0 << EOF
