@@ -9,6 +9,11 @@ LDAP_CONFIG_PASSWORD_HASH=$(slappasswd -s "${LDAP_CONFIG_PASSWORD}")
 if [ ! -f "${LDAP_DATA_DIR}/DB_CONFIG" ]; then
     echo "Initializing new LDAP database..."
     
+    # Create data directory and set permissions
+    mkdir -p "${LDAP_DATA_DIR}"
+    chgrp -R 0 "${LDAP_DATA_DIR}"
+    chmod -R g=u "${LDAP_DATA_DIR}"
+    
     # Create a basic DB_CONFIG file
     cat > "${LDAP_DATA_DIR}/DB_CONFIG" << EOF
 # One 0.25 GB memory map
@@ -57,12 +62,30 @@ EOF
 
     # Convert slapd.conf to slapd.d format
     rm -rf "${LDAP_CONFIG_DIR}"/*
-    slaptest -f /tmp/slapd.conf -F "${LDAP_CONFIG_DIR}"
+    slaptest -f /tmp/slapd.conf -F "${LDAP_CONFIG_DIR}" -u
     rm /tmp/slapd.conf
 
+    # Initialize the database
+    mkdir -p /var/run/openldap
+    slapadd -F "${LDAP_CONFIG_DIR}" -b "${LDAP_BASE_DN}" << EOF
+dn: ${LDAP_BASE_DN}
+objectClass: dcObject
+objectClass: organization
+dc: example
+o: Example Inc.
+
+dn: ou=people,${LDAP_BASE_DN}
+objectClass: organizationalUnit
+ou: people
+
+dn: ou=groups,${LDAP_BASE_DN}
+objectClass: organizationalUnit
+ou: groups
+EOF
+
     # Set correct permissions
-    chgrp -R 0 "${LDAP_DATA_DIR}" "${LDAP_CONFIG_DIR}"
-    chmod -R g=u "${LDAP_DATA_DIR}" "${LDAP_CONFIG_DIR}"
+    chgrp -R 0 "${LDAP_DATA_DIR}" "${LDAP_CONFIG_DIR}" /var/run/openldap
+    chmod -R g=u "${LDAP_DATA_DIR}" "${LDAP_CONFIG_DIR}" /var/run/openldap
 fi
 
 # Start slapd in the foreground
