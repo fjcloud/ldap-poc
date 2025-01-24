@@ -69,7 +69,7 @@ EOF
     rm /tmp/slapd.conf
 
     echo "Starting temporary slapd instance..."
-    slapd -h "ldap:/// ldapi:///" -F "${LDAP_CONFIG_DIR}" -d 1 || return 1
+    slapd -h "ldap://localhost:1389/ ldapi:///" -F "${LDAP_CONFIG_DIR}" -d 1 || return 1
 
     echo "Waiting for slapd to start..."
     for i in {1..30}; do
@@ -116,4 +116,4 @@ fi
 
 echo "Starting OpenLDAP server..."
 # Start slapd in the foreground with more verbose logging
-exec slapd -h "ldap:/// ldapi:///" -F "${LDAP_CONFIG_DIR}" -d 1
+exec slapd -h "ldap://0.0.0.0:1389/ ldapi:///" -F "${LDAP_CONFIG_DIR}" -d 1

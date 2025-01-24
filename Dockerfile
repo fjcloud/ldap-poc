@@ -44,7 +44,7 @@ RUN chmod +x /usr/local/bin/entrypoint.sh && \
     chmod -R g=u /etc/openldap /usr/local/bin/entrypoint.sh
 
 # Expose LDAP ports
-EXPOSE 389 636
+EXPOSE 1389 636
 
 # Set working directory
 WORKDIR ${LDAP_DATA_DIR}
