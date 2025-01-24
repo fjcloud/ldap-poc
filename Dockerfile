@@ -28,14 +28,11 @@ RUN dnf -y install \
         shadow-utils && \
     dnf clean all
 
-# Create LDAP user and group
-RUN groupadd -r ${LDAP_GROUP} && \
-    useradd -r -g ${LDAP_GROUP} -d ${LDAP_DATA_DIR} ${LDAP_USER}
-
-# Create necessary directories and set permissions
+# Create necessary directories and set permissions for OpenShift compatibility
 RUN mkdir -p ${LDAP_DATA_DIR} ${LDAP_CONFIG_DIR} && \
-    chown -R ${LDAP_USER}:${LDAP_GROUP} ${LDAP_DATA_DIR} ${LDAP_CONFIG_DIR} && \
-    chmod 700 ${LDAP_DATA_DIR} ${LDAP_CONFIG_DIR}
+    chmod 775 ${LDAP_DATA_DIR} ${LDAP_CONFIG_DIR} && \
+    chgrp -R 0 ${LDAP_DATA_DIR} ${LDAP_CONFIG_DIR} && \
+    chmod -R g=u ${LDAP_DATA_DIR} ${LDAP_CONFIG_DIR}
 
 # Copy configuration files and scripts
 COPY slapd.conf /etc/openldap/
@@ -43,7 +40,9 @@ COPY *.ldif /etc/openldap/slapd.d/
 COPY entrypoint.sh /usr/local/bin/
 
 # Set script permissions
-RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh && \
+    chgrp -R 0 /etc/openldap /usr/local/bin/entrypoint.sh && \
+    chmod -R g=u /etc/openldap /usr/local/bin/entrypoint.sh
 
 # Expose LDAP ports
 EXPOSE 389 636
@@ -51,8 +50,8 @@ EXPOSE 389 636
 # Set working directory
 WORKDIR ${LDAP_DATA_DIR}
 
-# Switch to LDAP user
-USER ${LDAP_USER}
+# Switch to non-root user (for OpenShift)
+USER 1001
 
 # Set entrypoint
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
