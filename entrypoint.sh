@@ -9,10 +9,10 @@ LDAP_CONFIG_PASSWORD_HASH=$(slappasswd -s "${LDAP_CONFIG_PASSWORD}")
 if [ ! -f "${LDAP_DATA_DIR}/DB_CONFIG" ]; then
     echo "Initializing new LDAP database..."
     
-    # Create data directory and set permissions
+    # Create directories if they don't exist
     mkdir -p "${LDAP_DATA_DIR}"
-    chgrp -R 0 "${LDAP_DATA_DIR}"
-    chmod -R g=u "${LDAP_DATA_DIR}"
+    mkdir -p "${LDAP_CONFIG_DIR}"
+    mkdir -p /var/run/openldap
     
     # Create a basic DB_CONFIG file
     cat > "${LDAP_DATA_DIR}/DB_CONFIG" << EOF
@@ -66,7 +66,6 @@ EOF
     rm /tmp/slapd.conf
 
     # Initialize the database
-    mkdir -p /var/run/openldap
     slapadd -F "${LDAP_CONFIG_DIR}" -b "${LDAP_BASE_DN}" << EOF
 dn: ${LDAP_BASE_DN}
 objectClass: dcObject
@@ -83,10 +82,7 @@ objectClass: organizationalUnit
 ou: groups
 EOF
 
-    # Set correct permissions
-    chgrp -R 0 "${LDAP_DATA_DIR}" "${LDAP_CONFIG_DIR}" /var/run/openldap
-    chmod -R g=u "${LDAP_DATA_DIR}" "${LDAP_CONFIG_DIR}" /var/run/openldap
 fi
 
 # Start slapd in the foreground
-exec slapd -h "ldap:/// ldapi:///" -u ${LDAP_USER} -g ${LDAP_GROUP} -F "${LDAP_CONFIG_DIR}" -d ${LDAP_LOG_LEVEL:-256}
+exec slapd -h "ldap:/// ldapi:///" -F "${LDAP_CONFIG_DIR}" -d ${LDAP_LOG_LEVEL:-256}
