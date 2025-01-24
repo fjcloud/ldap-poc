@@ -9,8 +9,15 @@ LDAP_CONFIG_PASSWORD_HASH=$(slappasswd -s "${LDAP_CONFIG_PASSWORD}")
 if [ ! -f "${LDAP_DATA_DIR}/DB_CONFIG" ]; then
     echo "Initializing new LDAP database..."
     
-    # Copy default DB_CONFIG
-    cp /usr/share/openldap-servers/DB_CONFIG.example "${LDAP_DATA_DIR}/DB_CONFIG"
+    # Create a basic DB_CONFIG file
+    cat > "${LDAP_DATA_DIR}/DB_CONFIG" << EOF
+# One 0.25 GB memory map
+set_cachesize 0 268435456 1
+
+# Transaction Log settings
+set_lg_regionmax 262144
+set_lg_bsize 2097152
+EOF
     
     # Initialize LDAP database
     slapadd -F "${LDAP_CONFIG_DIR}" -n 0 << EOF
@@ -53,7 +60,8 @@ olcAccess: to *
 EOF
 
     # Set correct permissions
-    chown -R ${LDAP_USER}:${LDAP_GROUP} "${LDAP_DATA_DIR}" "${LDAP_CONFIG_DIR}"
+    chgrp -R 0 "${LDAP_DATA_DIR}" "${LDAP_CONFIG_DIR}"
+    chmod -R g=u "${LDAP_DATA_DIR}" "${LDAP_CONFIG_DIR}"
 fi
 
 # Start slapd in the foreground
