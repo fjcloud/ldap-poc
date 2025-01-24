@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openldap
+spec:
+  template:
+    spec:
+      volumes:
+        - name: run-vol
+          emptyDir: {}
+      containers:
+        - name: openldap
+          volumeMounts:
+            - name: run-vol
+              mountPath: /var/run 

@@ -65,8 +65,14 @@ EOF
     slaptest -f /tmp/slapd.conf -F "${LDAP_CONFIG_DIR}" -u
     rm /tmp/slapd.conf
 
-    # Initialize the database
-    slapadd -F "${LDAP_CONFIG_DIR}" -b "${LDAP_BASE_DN}" << EOF
+    # Start slapd temporarily to initialize the database
+    slapd -h "ldap:/// ldapi:///" -F "${LDAP_CONFIG_DIR}" -d 0
+
+    # Wait for slapd to start
+    sleep 2
+
+    # Add initial entries
+    ldapadd -Y EXTERNAL -H ldapi:/// << EOF
 dn: ${LDAP_BASE_DN}
 objectClass: dcObject
 objectClass: organization
@@ -82,6 +88,9 @@ objectClass: organizationalUnit
 ou: groups
 EOF
 
+    # Stop the temporary slapd
+    kill $(cat /var/run/openldap/slapd.pid)
+    sleep 2
 fi
 
 # Start slapd in the foreground
