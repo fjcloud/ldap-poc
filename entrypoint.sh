@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+echo "Starting OpenLDAP initialization..."
+
 # Generate password hashes
 LDAP_ADMIN_PASSWORD_HASH=$(slappasswd -s "${LDAP_ADMIN_PASSWORD}")
 LDAP_CONFIG_PASSWORD_HASH=$(slappasswd -s "${LDAP_CONFIG_PASSWORD}")
@@ -34,6 +36,8 @@ include /etc/openldap/schema/nis.schema
 pidfile /var/run/openldap/slapd.pid
 argsfile /var/run/openldap/slapd.args
 
+modulepath /usr/lib64/openldap
+
 database config
 rootdn "cn=config"
 rootpw ${LDAP_CONFIG_PASSWORD_HASH}
@@ -60,18 +64,23 @@ access to *
     by * none
 EOF
 
-    # Convert slapd.conf to slapd.d format
+    echo "Converting slapd.conf to slapd.d format..."
     rm -rf "${LDAP_CONFIG_DIR}"/*
     slaptest -f /tmp/slapd.conf -F "${LDAP_CONFIG_DIR}" -u
     rm /tmp/slapd.conf
 
-    # Start slapd temporarily to initialize the database
-    slapd -h "ldap:/// ldapi:///" -F "${LDAP_CONFIG_DIR}" -d 0
+    echo "Starting temporary slapd instance..."
+    slapd -h "ldap:/// ldapi:///" -F "${LDAP_CONFIG_DIR}" -d 1
 
-    # Wait for slapd to start
-    sleep 2
+    echo "Waiting for slapd to start..."
+    for i in {1..30}; do
+        if ldapsearch -Y EXTERNAL -H ldapi:/// -b "cn=config" >/dev/null 2>&1; then
+            break
+        fi
+        sleep 1
+    done
 
-    # Add initial entries
+    echo "Adding initial entries..."
     ldapadd -Y EXTERNAL -H ldapi:/// << EOF
 dn: ${LDAP_BASE_DN}
 objectClass: dcObject
@@ -88,10 +97,13 @@ objectClass: organizationalUnit
 ou: groups
 EOF
 
-    # Stop the temporary slapd
-    kill $(cat /var/run/openldap/slapd.pid)
-    sleep 2
+    echo "Stopping temporary slapd instance..."
+    if [ -f /var/run/openldap/slapd.pid ]; then
+        kill $(cat /var/run/openldap/slapd.pid)
+        sleep 2
+    fi
 fi
 
-# Start slapd in the foreground
-exec slapd -h "ldap:/// ldapi:///" -F "${LDAP_CONFIG_DIR}" -d ${LDAP_LOG_LEVEL:-256}
+echo "Starting OpenLDAP server..."
+# Start slapd in the foreground with more verbose logging
+exec slapd -h "ldap:/// ldapi:///" -F "${LDAP_CONFIG_DIR}" -d 1
