@@ -17,15 +17,15 @@ ENV LDAP_USER=ldap \
     LDAP_CONFIG_PASSWORD=config
 
 # Install required packages
-RUN microdnf -y update && \
-    microdnf -y install \
+RUN dnf -y update && \
+    dnf -y install \
         2to3 \
         openldap \
         openldap-servers \
         openldap-clients \
         openssl \
         shadow-utils && \
-    microdnf clean all
+    dnf clean all
 
 # Create LDAP user and group
 RUN groupadd -r ${LDAP_GROUP} && \
