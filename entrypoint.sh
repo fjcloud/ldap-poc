@@ -41,6 +41,12 @@ database config
 rootdn "cn=config"
 rootpw ${LDAP_CONFIG_PASSWORD_HASH}
 
+# Load schemas
+include /etc/openldap/schema/core.ldif
+include /etc/openldap/schema/cosine.ldif
+include /etc/openldap/schema/nis.ldif
+include /etc/openldap/schema/inetorgperson.ldif
+
 database mdb
 maxsize 1073741824
 suffix "${LDAP_BASE_DN}"
@@ -67,6 +73,10 @@ EOF
     rm -rf "${LDAP_CONFIG_DIR}"/*
     slaptest -f /tmp/slapd.conf -F "${LDAP_CONFIG_DIR}" -u || return 1
     rm /tmp/slapd.conf
+
+    # Copy schema files
+    mkdir -p "${LDAP_CONFIG_DIR}/cn=config/cn=schema"
+    cp /etc/openldap/schema/*.ldif "${LDAP_CONFIG_DIR}/cn=config/cn=schema/"
 
     echo "Starting temporary slapd instance..."
     slapd -h "ldap://localhost:1389/ ldapi:///" -F "${LDAP_CONFIG_DIR}" -d 1 || return 1
