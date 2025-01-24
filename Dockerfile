@@ -35,7 +35,6 @@ RUN mkdir -p ${LDAP_DATA_DIR} ${LDAP_CONFIG_DIR} && \
     chmod -R g=u ${LDAP_DATA_DIR} ${LDAP_CONFIG_DIR}
 
 # Copy configuration files and scripts
-COPY slapd.conf /etc/openldap/
 COPY *.ldif /etc/openldap/slapd.d/
 COPY entrypoint.sh /usr/local/bin/
 
