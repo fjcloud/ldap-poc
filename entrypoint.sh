@@ -56,7 +56,7 @@ access to *
 EOF
 
     # Convert slapd.conf to slapd.d format
-    mkdir -p "${LDAP_CONFIG_DIR}"
+    rm -rf "${LDAP_CONFIG_DIR}"/*
     slaptest -f /tmp/slapd.conf -F "${LDAP_CONFIG_DIR}"
     rm /tmp/slapd.conf
 
