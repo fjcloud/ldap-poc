@@ -40,7 +40,6 @@ modulepath /usr/lib64/openldap
 database config
 rootdn "cn=config"
 rootpw ${LDAP_CONFIG_PASSWORD_HASH}
-directory ${LDAP_CONFIG_DIR}
 
 database mdb
 maxsize 1073741824
@@ -68,10 +67,6 @@ EOF
     rm -rf "${LDAP_CONFIG_DIR}"/*
     slaptest -f /tmp/slapd.conf -F "${LDAP_CONFIG_DIR}" -u || return 1
     rm /tmp/slapd.conf
-
-    # Ensure configuration files exist and are readable
-    touch "${LDAP_CONFIG_DIR}"/cn=config.ldif
-    chmod 600 "${LDAP_CONFIG_DIR}"/cn=config.ldif
 
     echo "Starting temporary slapd instance..."
     slapd -h "ldap://localhost:1389/ ldapi:///" -F "${LDAP_CONFIG_DIR}" -d 1 || return 1
