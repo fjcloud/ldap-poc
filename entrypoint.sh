@@ -19,50 +19,46 @@ set_lg_regionmax 262144
 set_lg_bsize 2097152
 EOF
 
-    # Create initial directory structure
-    mkdir -p "${LDAP_CONFIG_DIR}/cn=config/olcDatabase={0}config"
-    mkdir -p "${LDAP_CONFIG_DIR}/cn=config/olcDatabase={1}mdb"
-    mkdir -p "${LDAP_CONFIG_DIR}/cn=config/cn=schema"
-    
-    # Initialize LDAP database
-    slapadd -F "${LDAP_CONFIG_DIR}" -n 0 << EOF
-dn: cn=config
-objectClass: olcGlobal
-cn: config
-olcArgsFile: /var/run/openldap/slapd.args
-olcPidFile: /var/run/openldap/slapd.pid
+    # Create temporary slapd.conf
+    cat > /tmp/slapd.conf << EOF
+include /etc/openldap/schema/core.schema
+include /etc/openldap/schema/cosine.schema
+include /etc/openldap/schema/inetorgperson.schema
+include /etc/openldap/schema/nis.schema
 
-dn: cn=schema,cn=config
-objectClass: olcSchemaConfig
-cn: schema
+pidfile /var/run/openldap/slapd.pid
+argsfile /var/run/openldap/slapd.args
 
-dn: olcDatabase={0}config,cn=config
-objectClass: olcDatabaseConfig
-olcDatabase: {0}config
-olcRootDN: cn=config
-olcRootPW: ${LDAP_CONFIG_PASSWORD_HASH}
+database config
+rootdn "cn=config"
+rootpw ${LDAP_CONFIG_PASSWORD_HASH}
 
-dn: olcDatabase={1}mdb,cn=config
-objectClass: olcDatabaseConfig
-objectClass: olcMdbConfig
-olcDatabase: {1}mdb
-olcDbDirectory: ${LDAP_DATA_DIR}
-olcSuffix: ${LDAP_BASE_DN}
-olcRootDN: cn=admin,${LDAP_BASE_DN}
-olcRootPW: ${LDAP_ADMIN_PASSWORD_HASH}
-olcDbIndex: objectClass eq
-olcDbIndex: cn,uid eq
-olcDbIndex: uidNumber,gidNumber eq
-olcDbIndex: member,memberUid eq
-olcAccess: to attrs=userPassword,shadowLastChange
-  by self write
-  by anonymous auth
-  by * none
-olcAccess: to *
-  by self write
-  by users read
-  by * none
+database mdb
+maxsize 1073741824
+suffix "${LDAP_BASE_DN}"
+rootdn "cn=admin,${LDAP_BASE_DN}"
+rootpw ${LDAP_ADMIN_PASSWORD_HASH}
+directory ${LDAP_DATA_DIR}
+index objectClass eq
+index cn,uid eq
+index uidNumber,gidNumber eq
+index member,memberUid eq
+
+access to attrs=userPassword,shadowLastChange
+    by self write
+    by anonymous auth
+    by * none
+
+access to *
+    by self write
+    by users read
+    by * none
 EOF
+
+    # Convert slapd.conf to slapd.d format
+    mkdir -p "${LDAP_CONFIG_DIR}"
+    slaptest -f /tmp/slapd.conf -F "${LDAP_CONFIG_DIR}"
+    rm /tmp/slapd.conf
 
     # Set correct permissions
     chgrp -R 0 "${LDAP_DATA_DIR}" "${LDAP_CONFIG_DIR}"
