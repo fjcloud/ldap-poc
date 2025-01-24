@@ -19,7 +19,8 @@ ENV LDAP_USER=ldap \
 # Install required packages
 RUN dnf -y update && \
     dnf -y install \
-        dnf-plugins-core && \
+        dnf-plugins-core \
+        epel-release && \
     dnf config-manager --set-enabled ubi-9-baseos-rpms && \
     dnf config-manager --set-enabled ubi-9-appstream-rpms && \
     dnf -y install \
