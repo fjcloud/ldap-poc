@@ -19,8 +19,11 @@ ENV LDAP_USER=ldap \
 # Install required packages
 RUN dnf -y update && \
     dnf -y install \
-        dnf-plugins-core \
-        epel-release && \
+        dnf-plugins-core && \
+    dnf config-manager --set-enabled crb && \
+    dnf -y install \
+        https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm \
+        https://dl.fedoraproject.org/pub/epel/epel-next-release-latest-9.noarch.rpm && \
     dnf config-manager --set-enabled ubi-9-baseos-rpms && \
     dnf config-manager --set-enabled ubi-9-appstream-rpms && \
     dnf -y install \
