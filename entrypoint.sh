@@ -65,7 +65,7 @@ EOF
 
     echo "Converting slapd.conf to slapd.d format..."
     rm -rf "${LDAP_CONFIG_DIR}"/*
-    slaptest -f /tmp/slapd.conf -F "${LDAP_CONFIG_DIR}" || return 1
+    slaptest -f /tmp/slapd.conf -F "${LDAP_CONFIG_DIR}" -u || return 1
     rm /tmp/slapd.conf
 
     echo "Starting temporary slapd instance..."
