@@ -40,6 +40,9 @@ modulepath /usr/lib64/openldap
 database config
 rootdn "cn=config"
 rootpw ${LDAP_CONFIG_PASSWORD_HASH}
+access to *
+    by dn.exact="gidNumber=0+uidNumber=1000850000,cn=peercred,cn=external,cn=auth" manage
+    by * none
 
 database mdb
 maxsize 1073741824
@@ -68,7 +71,7 @@ EOF
     slaptest -f /tmp/slapd.conf -F "${LDAP_CONFIG_DIR}" -u || return 1
     rm /tmp/slapd.conf
 
-    # Create initial cn=config.ldif
+    # Create initial cn=config.ldif with proper permissions
     cat > "${LDAP_CONFIG_DIR}/cn=config.ldif" << EOF
 dn: cn=config
 objectClass: olcGlobal
@@ -83,6 +86,7 @@ cn: schema
 dn: olcDatabase={0}config,cn=config
 objectClass: olcDatabaseConfig
 olcDatabase: {0}config
+olcAccess: to * by dn.exact="gidNumber=0+uidNumber=1000850000,cn=peercred,cn=external,cn=auth" manage by * none
 olcRootDN: cn=config
 olcRootPW: ${LDAP_CONFIG_PASSWORD_HASH}
 
@@ -98,6 +102,8 @@ olcDbIndex: objectClass eq
 olcDbIndex: cn,uid eq
 olcDbIndex: uidNumber,gidNumber eq
 olcDbIndex: member,memberUid eq
+olcAccess: to attrs=userPassword,shadowLastChange by self write by anonymous auth by * none
+olcAccess: to * by self write by users read by * none
 EOF
 
     echo "Starting temporary slapd instance..."
