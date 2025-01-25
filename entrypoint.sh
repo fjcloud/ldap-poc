@@ -76,6 +76,9 @@ access to *
 
 # Monitor database
 database monitor
+access to *
+    by dn.exact="gidNumber=0+uidNumber=1000850000,cn=peercred,cn=external,cn=auth" read
+    by * none
 EOF
 
     echo "Converting slapd.conf to slapd.d format..."
@@ -83,12 +86,8 @@ EOF
     slaptest -f /tmp/slapd.conf -F "${LDAP_CONFIG_DIR}" -u || return 1
     rm /tmp/slapd.conf
 
-    # Set proper permissions
-    chown -R 1000850000:0 "${LDAP_CONFIG_DIR}" "${LDAP_DATA_DIR}"
-    chmod -R 700 "${LDAP_CONFIG_DIR}" "${LDAP_DATA_DIR}"
-
     echo "Starting temporary slapd instance..."
-    slapd -h "ldap://localhost:1389/ ldapi:///" -F "${LDAP_CONFIG_DIR}" -u 1000850000 -g 0 -d 1 || return 1
+    slapd -h "ldap://localhost:1389/ ldapi:///" -F "${LDAP_CONFIG_DIR}" -d 1 || return 1
 
     echo "Waiting for slapd to start..."
     for i in {1..30}; do
@@ -135,4 +134,4 @@ fi
 
 echo "Starting OpenLDAP server..."
 # Start slapd in the foreground with more verbose logging
-exec slapd -h "ldap://0.0.0.0:1389/ ldapi:///" -F "${LDAP_CONFIG_DIR}" -u 1000850000 -g 0 -d 1
+exec slapd -h "ldap://0.0.0.0:1389/ ldapi:///" -F "${LDAP_CONFIG_DIR}" -d 1
