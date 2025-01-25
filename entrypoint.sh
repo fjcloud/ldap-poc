@@ -3,10 +3,6 @@ set -e
 
 echo "Starting OpenLDAP initialization..."
 
-# Parse domain components from LDAP_BASE_DN
-DC1=$(echo ${LDAP_BASE_DN} | cut -d',' -f1 | cut -d'=' -f2)
-DC2=$(echo ${LDAP_BASE_DN} | cut -d',' -f2 | cut -d'=' -f2)
-
 # Generate password hashes
 LDAP_ADMIN_PASSWORD_HASH=$(slappasswd -s "${LDAP_ADMIN_PASSWORD}")
 LDAP_CONFIG_PASSWORD_HASH=$(slappasswd -s "${LDAP_CONFIG_PASSWORD}")
@@ -124,7 +120,7 @@ EOF
 dn: ${LDAP_BASE_DN}
 objectClass: dcObject
 objectClass: organization
-dc: ${DC1}
+dc: example
 o: Example Inc.
 
 dn: ou=people,${LDAP_BASE_DN}
