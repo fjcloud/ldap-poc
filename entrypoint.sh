@@ -68,6 +68,38 @@ EOF
     slaptest -f /tmp/slapd.conf -F "${LDAP_CONFIG_DIR}" -u || return 1
     rm /tmp/slapd.conf
 
+    # Create initial cn=config.ldif
+    cat > "${LDAP_CONFIG_DIR}/cn=config.ldif" << EOF
+dn: cn=config
+objectClass: olcGlobal
+cn: config
+olcPidFile: /var/run/openldap/slapd.pid
+olcArgsFile: /var/run/openldap/slapd.args
+
+dn: cn=schema,cn=config
+objectClass: olcSchemaConfig
+cn: schema
+
+dn: olcDatabase={0}config,cn=config
+objectClass: olcDatabaseConfig
+olcDatabase: {0}config
+olcRootDN: cn=config
+olcRootPW: ${LDAP_CONFIG_PASSWORD_HASH}
+
+dn: olcDatabase={1}mdb,cn=config
+objectClass: olcDatabaseConfig
+objectClass: olcMdbConfig
+olcDatabase: {1}mdb
+olcDbDirectory: ${LDAP_DATA_DIR}
+olcSuffix: ${LDAP_BASE_DN}
+olcRootDN: cn=admin,${LDAP_BASE_DN}
+olcRootPW: ${LDAP_ADMIN_PASSWORD_HASH}
+olcDbIndex: objectClass eq
+olcDbIndex: cn,uid eq
+olcDbIndex: uidNumber,gidNumber eq
+olcDbIndex: member,memberUid eq
+EOF
+
     echo "Starting temporary slapd instance..."
     slapd -h "ldap://localhost:1389/ ldapi:///" -F "${LDAP_CONFIG_DIR}" -d 1 || return 1
 
