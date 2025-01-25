@@ -8,8 +8,18 @@ spec:
       volumes:
         - name: run-vol
           emptyDir: {}
+        - name: ldap-data
+          persistentVolumeClaim:
+            claimName: openldap-data
+        - name: ldap-config
+          persistentVolumeClaim:
+            claimName: openldap-config
       containers:
         - name: openldap
           volumeMounts:
             - name: run-vol
-              mountPath: /var/run 
+              mountPath: /var/run
+            - name: ldap-data
+              mountPath: /var/lib/ldap
+            - name: ldap-config
+              mountPath: /etc/openldap/slapd.d 

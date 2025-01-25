@@ -41,18 +41,12 @@ database config
 rootdn "cn=config"
 rootpw ${LDAP_CONFIG_PASSWORD_HASH}
 
-# Load schemas
-include /etc/openldap/schema/core.ldif
-include /etc/openldap/schema/cosine.ldif
-include /etc/openldap/schema/nis.ldif
-include /etc/openldap/schema/inetorgperson.ldif
-
 database mdb
 maxsize 1073741824
 suffix "${LDAP_BASE_DN}"
 rootdn "cn=admin,${LDAP_BASE_DN}"
 rootpw ${LDAP_ADMIN_PASSWORD_HASH}
-directory ${LDAP_DATA_DIR}
+directory "${LDAP_DATA_DIR}"
 index objectClass eq
 index cn,uid eq
 index uidNumber,gidNumber eq
@@ -71,12 +65,8 @@ EOF
 
     echo "Converting slapd.conf to slapd.d format..."
     rm -rf "${LDAP_CONFIG_DIR}"/*
-    slaptest -f /tmp/slapd.conf -F "${LDAP_CONFIG_DIR}" -u || return 1
+    slaptest -f /tmp/slapd.conf -F "${LDAP_CONFIG_DIR}" || return 1
     rm /tmp/slapd.conf
-
-    # Copy schema files
-    mkdir -p "${LDAP_CONFIG_DIR}/cn=config/cn=schema"
-    cp /etc/openldap/schema/*.ldif "${LDAP_CONFIG_DIR}/cn=config/cn=schema/"
 
     echo "Starting temporary slapd instance..."
     slapd -h "ldap://localhost:1389/ ldapi:///" -F "${LDAP_CONFIG_DIR}" -d 1 || return 1
@@ -86,7 +76,7 @@ EOF
         if ldapsearch -Y EXTERNAL -H ldapi:/// -b "cn=config" >/dev/null 2>&1; then
             break
         fi
-        if [ $i -eq 30 ]; then
+        if [ "$i" -eq 30 ]; then
             echo "Timeout waiting for slapd to start"
             return 1
         fi
@@ -112,7 +102,7 @@ EOF
 
     echo "Stopping temporary slapd instance..."
     if [ -f /var/run/openldap/slapd.pid ]; then
-        kill $(cat /var/run/openldap/slapd.pid)
+        kill "$(cat /var/run/openldap/slapd.pid)"
         sleep 2
     fi
     
