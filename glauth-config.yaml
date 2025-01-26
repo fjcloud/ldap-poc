@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: glauth-config
+data:
+  config.cfg: |
+    [ldap]
+    enabled = true
+    listen = "0.0.0.0:1389"
+
+    [ldaps]
+    enabled = false
+
+    [backend]
+    datastore = "config"
+    baseDN = "dc=example,dc=org"
+
+    [[users]]
+    name = "admin"
+    uidnumber = 5001
+    primarygroup = 5501
+    passsha256 = "6478579e37aff45f013e14eeb30b3cc56c72ccdc310123bcdf53e0333e3f416a"  # dogood
+
+    [[users]]
+    name = "testuser"
+    uidnumber = 5002
+    primarygroup = 5501
+    passsha256 = "6478579e37aff45f013e14eeb30b3cc56c72ccdc310123bcdf53e0333e3f416a"  # dogood
+
+    [[groups]]
+    name = "users"
+    gidnumber = 5501 

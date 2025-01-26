@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: glauth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: glauth
+  template:
+    metadata:
+      labels:
+        app: glauth
+    spec:
+      containers:
+      - name: glauth
+        image: glauth/glauth:latest
+        ports:
+        - containerPort: 1389
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+        args:
+        - "-c"
+        - "/app/config/config.cfg"
+      volumes:
+      - name: config
+        configMap:
+          name: glauth-config 
