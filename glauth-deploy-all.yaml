@@ -97,13 +97,6 @@ data:
     uidnumber = 5001
     primarygroup = 5502
     passsha256 = "6478579e37aff45f013e14eeb30b3cc56c72ccdc310123bcdf53e0333e3f416a"  # dogood
-    sshkeys = []
-    otherGroups = []
-    includeInGroups = []
-    customAttrs = []
-    loginShell = "/bin/bash"
-    homeDir = "/home/serviceuser"
-    isAdmin = true
 
     [[users.capabilities]]
     action = "search"
