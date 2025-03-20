@@ -53,8 +53,26 @@ spec:
 
 ---
 
+kind: Service
 apiVersion: v1
+metadata:
+  name: ldap-external
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-internal: 'true'
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+spec:
+  ports:
+    - protocol: TCP
+      port: 1389
+      targetPort: 1389
+  type: LoadBalancer
+  selector:
+    app: glauth
+
+---
+
 kind: ConfigMap
+apiVersion: v1
 metadata:
   name: glauth-config
 data:
@@ -62,6 +80,8 @@ data:
     [ldap]
     enabled = true
     listen = "0.0.0.0:1389"
+    debug = true
+    bindformat = "cn=%s,dc=example,dc=org"
 
     [ldaps]
     enabled = false
@@ -69,19 +89,37 @@ data:
     [backend]
     datastore = "config"
     baseDN = "dc=example,dc=org"
+    anonymousdse = true
 
     [[users]]
-    name = "admin"
+    name = "serviceuser"
+    mail = "serviceuser@example.org"
     uidnumber = 5001
-    primarygroup = 5501
+    primarygroup = 5502
     passsha256 = "6478579e37aff45f013e14eeb30b3cc56c72ccdc310123bcdf53e0333e3f416a"  # dogood
+    sshkeys = []
+    otherGroups = []
+    includeInGroups = []
+    customAttrs = []
+    loginShell = "/bin/bash"
+    homeDir = "/home/serviceuser"
+    isAdmin = true
+
+    [[users.capabilities]]
+    action = "search"
+    object = "dc=example,dc=org"
 
     [[users]]
     name = "testuser"
+    mail = "testuser@example.org"
     uidnumber = 5002
     primarygroup = 5501
     passsha256 = "6478579e37aff45f013e14eeb30b3cc56c72ccdc310123bcdf53e0333e3f416a"  # dogood
 
     [[groups]]
     name = "users"
-    gidnumber = 5501 
+    gidnumber = 5501
+
+    [[groups]]
+    name = "svcaccts"
+    gidnumber = 5502 
