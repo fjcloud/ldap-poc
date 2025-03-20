@@ -10,6 +10,9 @@ spec:
     matchLabels:
       app: glauth
   template:
+    metadata:
+      labels:
+        app: glauth
     spec:
       volumes:
         - name: config
@@ -19,10 +22,12 @@ spec:
         - resources: {}
           name: glauth
           env:
+            - name: GLAUTH_ARGS
+              value: '-c /app/config/config.cfg'
             - name: GLAUTH_CONFIG
               value: /app/config/config.cfg
           ports:
-            - containerPort: 389
+            - containerPort: 1389
               protocol: TCP
           imagePullPolicy: IfNotPresent
           volumeMounts:
@@ -30,3 +35,18 @@ spec:
               mountPath: /app/config
           terminationMessagePolicy: File
           image: 'docker.io/glauth/glauth:v2.3.2'
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: glauth
+spec:
+  ports:
+    - protocol: TCP
+      port: 1389
+      targetPort: 1389
+  type: ClusterIP
+  selector:
+      app: glauth
