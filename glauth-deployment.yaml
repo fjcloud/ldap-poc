@@ -10,8 +10,8 @@ spec:
     matchLabels:
       app: glauth
   template:
-      labels:
-        app: glauth
+    labels:
+      app: glauth
     spec:
       volumes:
         - name: config
